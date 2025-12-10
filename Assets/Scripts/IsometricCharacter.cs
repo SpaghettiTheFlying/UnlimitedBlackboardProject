@@ -71,13 +71,12 @@ public class IsometricCharacter : MonoBehaviour
         return true;
     }
 
+    // Karakterin eriþebileceði tüm tile'larý hesapla
     public HashSet<Vector3Int> GetReachableTiles()
     {
         HashSet<Vector3Int> reachable = new HashSet<Vector3Int>();
         Queue<Vector3Int> toExplore = new Queue<Vector3Int>();
         Dictionary<Vector3Int, int> distances = new Dictionary<Vector3Int, int>();
-
-        Debug.Log("Karakter baþlangýç pozisyonu: " + currentGridPosition);
 
         if (!tilemap.HasTile(currentGridPosition))
         {
@@ -109,14 +108,13 @@ public class IsometricCharacter : MonoBehaviour
             if (currentDistance >= moveRange)
                 continue;
 
-            // Ýzometrik Z as Y için 4 yönlü komþular
-            // Her tile'ýn 4 komþusu var (diamond pattern)
+            // Ýzometrik piramit için 4 çapraz komþu
             Vector3Int[] neighbors = new Vector3Int[]
             {
-                new Vector3Int(current.x - 1, current.y - 2, 0),  // Sol-alt
-                new Vector3Int(current.x + 1, current.y + 2, 0),  // Sað-üst  
-                new Vector3Int(current.x - 1, current.y + 1, 0),  // Sol-üst
-                new Vector3Int(current.x + 1, current.y - 1, 0),  // Sað-alt
+                new Vector3Int(current.x - 2, current.y - 1, 0),  // Sol-alt çapraz
+                new Vector3Int(current.x - 1, current.y - 2, 0),  // Sað-alt çapraz
+                new Vector3Int(current.x + 1, current.y + 2, 0),  // Sol-üst çapraz
+                new Vector3Int(current.x + 2, current.y + 1, 0),  // Sað-üst çapraz
             };
 
             foreach (Vector3Int neighbor in neighbors)
@@ -124,16 +122,14 @@ public class IsometricCharacter : MonoBehaviour
                 if (distances.ContainsKey(neighbor))
                     continue;
 
-                bool hasTile = tilemap.HasTile(neighbor);
-
-                if (!hasTile)
+                if (!tilemap.HasTile(neighbor))
                     continue;
 
                 int newDistance = currentDistance + 1;
                 distances[neighbor] = newDistance;
                 reachable.Add(neighbor);
 
-                Debug.Log($"Eriþilebilir tile: {neighbor}, mesafe: {newDistance}");
+                Debug.Log($"Eriþilebilir: {neighbor}, offset: ({neighbor.x - current.x}, {neighbor.y - current.y}), mesafe: {newDistance}");
 
                 if (newDistance < moveRange)
                 {
@@ -142,7 +138,7 @@ public class IsometricCharacter : MonoBehaviour
             }
         }
 
-        Debug.Log("Toplam eriþilebilir tile sayýsý: " + reachable.Count);
+        Debug.Log($"Toplam eriþilebilir tile sayýsý: {reachable.Count}");
         return reachable;
     }
 
