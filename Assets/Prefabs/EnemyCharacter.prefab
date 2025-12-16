@@ -10,10 +10,10 @@ GameObject:
   m_Component:
   - component: {fileID: 3543348942926096582}
   - component: {fileID: 7733350711877029181}
-  - component: {fileID: 936971983263123955}
   - component: {fileID: 740164055113345817}
+  - component: {fileID: -5975180155373439911}
   m_Layer: 0
-  m_Name: PlayerCharacter
+  m_Name: EnemyCharacter
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -82,7 +82,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 30
   m_Sprite: {fileID: -3686959063800322984, guid: cd133ec771f71e24dbd00092c8519218, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -92,21 +92,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &936971983263123955
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2259898057482860953}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9dceb64f1b314c143bff5b619980adae, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::IsometricCharacter
-  moveRange: 2
-  moveSpeed: 5
-  tilemap: {fileID: 0}
 --- !u!61 &740164055113345817
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -153,3 +138,18 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.49, y: 0.46}
   m_EdgeRadius: 0
+--- !u!114 &-5975180155373439911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2259898057482860953}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14991cb6df475de49a5ceadc6c7a9493, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::IsometricEnemy
+  moveRange: 1
+  moveSpeed: 3
+  tilemap: {fileID: 0}
