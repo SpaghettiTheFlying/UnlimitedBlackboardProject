@@ -16,15 +16,13 @@ public class IsometricCharacter : MonoBehaviour
     private Vector3Int currentGridPosition;
     private bool isMoving = false;
     private Vector3 targetWorldPosition;
+    private bool shouldGiveMovementPoint = true;
 
     void Start()
     {
         if (tilemap != null)
         {
             currentGridPosition = tilemap.WorldToCell(transform.position);
-            Debug.Log("Baþlangýç world pozisyonu: " + transform.position);
-            Debug.Log("Baþlangýç grid pozisyonu: " + currentGridPosition);
-
             SnapToTileCenter();
         }
     }
@@ -41,12 +39,18 @@ public class IsometricCharacter : MonoBehaviour
             {
                 transform.position = targetWorldPosition;
                 isMoving = false;
+
+                if (shouldGiveMovementPoint)
+                {
+                    ScoreManager.Instance?.OnPlayerMoved();
+                }
             }
         }
     }
 
+
     // Karakteri belirtilen grid pozisyonuna hareket ettir
-    public bool MoveToGridPosition(Vector3Int targetGridPosition)
+    public bool MoveToGridPosition(Vector3Int targetGridPosition, bool isAttackMove = false)
     {
         // Zaten hareket ediyorsa yeni hareket baþlatma
         if (isMoving)
@@ -69,6 +73,8 @@ public class IsometricCharacter : MonoBehaviour
         currentGridPosition = targetGridPosition;
         targetWorldPosition = tilemap.GetCellCenterWorld(targetGridPosition);
         isMoving = true;
+
+        shouldGiveMovementPoint = !isAttackMove;
 
         return true;
     }

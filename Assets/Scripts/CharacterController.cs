@@ -56,11 +56,20 @@ public class CharacterController : MonoBehaviour
                 
                 if (tilemap.HasTile(clickedCell))
                 {
-                    bool moved = selectedCharacter.MoveToGridPosition(clickedCell);
+                    bool isEnemyAtPosition = IsEnemyAtPosition(clickedCell);
+
+                    bool moved = selectedCharacter.MoveToGridPosition(clickedCell, isEnemyAtPosition);
                     
                     if (moved)
                     {
-                        Debug.Log("Karakter hareket ediyor: " + clickedCell);
+                        if (isEnemyAtPosition)
+                        {
+                            Debug.Log("Karakter düþmana saldýrýyor: " + clickedCell);
+                        }
+                        else
+                        {
+                            Debug.Log("Karakter hareket ediyor: " + clickedCell);
+                        }
 
                         StartCoroutine(WaitForMoveComplete(selectedCharacter));
                         DeselectCharacter();                        
@@ -74,7 +83,22 @@ public class CharacterController : MonoBehaviour
             }
         }
     }
-    
+    bool IsEnemyAtPosition(Vector3Int position)
+    {
+        if (turnManager == null || turnManager.enemies == null)
+            return false;
+
+        foreach (IsometricEnemy enemy in turnManager.enemies)
+        {
+            if (enemy != null && enemy.GetCurrentGridPosition() == position)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     System.Collections.IEnumerator WaitForMoveComplete(IsometricCharacter movingCharacter)
     {
         // Karakterin hareketi bitene kadar bekle

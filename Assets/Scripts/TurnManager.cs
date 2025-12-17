@@ -11,6 +11,8 @@ public class TurnManager : MonoBehaviour
     [Header("Turn Settings")]
     public bool isPlayerTurn = true;
 
+    public ObjectSpawner objectSpawner;
+
     private int currentEnemyIndex = 0;
     private bool isProcessingTurn = false;
 
@@ -32,8 +34,19 @@ public class TurnManager : MonoBehaviour
     {
         if (isPlayerTurn && !isProcessingTurn)
         {
-            // Oyuncu bir düþmanýn üzerine geldi mi kontrol et
-            CheckPlayerAttack();
+            Vector3Int playerPos = playerCharacter.GetCurrentGridPosition();
+
+            bool killedEnemy = CheckPlayerAttack();
+
+            if (!killedEnemy && objectSpawner != null)
+            {
+                objectSpawner.CheckCollectiblePickup(playerPos, true);
+            }
+
+            if (objectSpawner != null)
+            {
+                objectSpawner.OnPlayerMoved();
+            }
 
             Debug.Log("Oyuncu hareketi tamamlandý - Düþman sýrasý");
             isPlayerTurn = false;
@@ -41,11 +54,13 @@ public class TurnManager : MonoBehaviour
         }
     }
 
-    void CheckPlayerAttack()
+    bool CheckPlayerAttack()
     {
-        if (playerCharacter == null) return;
+        if (playerCharacter == null)
+            return false;
 
         Vector3Int playerPos = playerCharacter.GetCurrentGridPosition();
+        bool killedEnemy = false;
 
         // Tüm düþmanlarý kontrol et
         for (int i = enemies.Count - 1; i >= 0; i--)
@@ -57,16 +72,27 @@ public class TurnManager : MonoBehaviour
             if (playerPos == enemyPos)
             {
                 Debug.Log("Oyuncu düþmaný yendi!");
+
+                if (ScoreManager.Instance != null)
+                {
+                    ScoreManager.Instance.OnEnemyKilled();
+                }
+
                 enemies[i].Die();
                 enemies.RemoveAt(i);
+                killedEnemy = true;
 
                 // Tüm düþmanlar yenildiyse oyun bitti
                 if (enemies.Count == 0)
                 {
                     Debug.Log("OYUNCU KAZANDI!");
                 }
+
+                break;
             }
         }
+
+        return killedEnemy;
     }
 
     IEnumerator ProcessEnemyTurns()
@@ -91,6 +117,11 @@ public class TurnManager : MonoBehaviour
 
             // Düþman hareket etmeyi bitirene kadar bekle
             yield return new WaitUntil(() => !enemies[i].IsMoving());
+
+            if(objectSpawner != null)
+            {
+                objectSpawner.CheckCollectiblePickup(enemies[i].GetCurrentGridPosition(), false);
+            }
 
             // Düþman oyuncuyu yendi mi kontrol et
             CheckEnemyAttack(enemies[i]);
