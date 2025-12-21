@@ -16,13 +16,6 @@ public class ObjectSpawner : MonoBehaviour
 
     private List<CollectibleObject> activeCollectibles = new List<CollectibleObject>();
 
-    void Start()
-    {
-        for (int i = 0; i < 3; i++)
-        {
-            SpawnCollectible();
-        }
-    }
 
     public void SpawnCollectible()
     {

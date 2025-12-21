@@ -14,6 +14,9 @@ public class ScoreManager : MonoBehaviour
 
     [Header("UI")]
     public TextMeshProUGUI scoreText; // veya public Text scoreText;
+    public TextMeshProUGUI roundText;
+
+    public RoundManager roundManager;
 
     void Awake()
     {
@@ -30,6 +33,12 @@ public class ScoreManager : MonoBehaviour
     void Start()
     {
         UpdateScoreUI();
+        UpdateRoundUI();
+    }
+
+    void Update()
+    {
+        UpdateRoundUI();
     }
 
     public void AddScore(int points, string reason = "")
@@ -60,6 +69,14 @@ public class ScoreManager : MonoBehaviour
         {
             scoreText.text = $"Score: {currentScore}";
         }
+    }
+
+    void UpdateRoundUI()
+    {
+        if (roundText != null && roundManager != null)
+        {
+            roundText.text = $"Round: {roundManager.GetCurrentRound()}/3";
+        }   
     }
 
     public int GetScore()

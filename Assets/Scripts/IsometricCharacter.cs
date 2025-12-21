@@ -86,6 +86,17 @@ public class IsometricCharacter : MonoBehaviour
         Queue<Vector3Int> toExplore = new Queue<Vector3Int>();
         Dictionary<Vector3Int, int> distances = new Dictionary<Vector3Int, int>();
 
+        // DEBUG: Tilemap kontrolü
+        Debug.Log($"=== GET REACHABLE DEBUG ===");
+        Debug.Log($"Tilemap null mu: {tilemap == null}");
+        if (tilemap != null)
+        {
+            Debug.Log($"Tilemap aktif mi: {tilemap.gameObject.activeInHierarchy}");
+            Debug.Log($"Tilemap adý: {tilemap.gameObject.name}");
+        }
+        Debug.Log($"Mevcut pozisyon: {currentGridPosition}");
+        Debug.Log($"Bu pozisyonda tile var mý: {tilemap.HasTile(currentGridPosition)}");
+
         if (!tilemap.HasTile(currentGridPosition))
         {
             Debug.LogWarning("Karakter tile üzerinde deðil!");
@@ -104,7 +115,6 @@ public class IsometricCharacter : MonoBehaviour
             }
         }
 
-        // Baþlangýç noktasý
         toExplore.Enqueue(currentGridPosition);
         distances[currentGridPosition] = 0;
 
@@ -116,28 +126,31 @@ public class IsometricCharacter : MonoBehaviour
             if (currentDistance >= moveRange)
                 continue;
 
-            // Ýzometrik piramit için 4 çapraz komþu
             Vector3Int[] neighbors = new Vector3Int[]
             {
-                new Vector3Int(current.x - 2, current.y - 1, 0),  // Sol-alt çapraz
-                new Vector3Int(current.x - 1, current.y - 2, 0),  // Sað-alt çapraz
-                new Vector3Int(current.x + 1, current.y + 2, 0),  // Sol-üst çapraz
-                new Vector3Int(current.x + 2, current.y + 1, 0),  // Sað-üst çapraz
+            new Vector3Int(current.x - 2, current.y - 1, 0),
+            new Vector3Int(current.x - 1, current.y - 2, 0),
+            new Vector3Int(current.x + 1, current.y + 2, 0),
+            new Vector3Int(current.x + 2, current.y + 1, 0),
             };
+
+            // DEBUG: Komþularý kontrol et
+            Debug.Log($"Komþu kontrol ediliyor, current: {current}");
 
             foreach (Vector3Int neighbor in neighbors)
             {
                 if (distances.ContainsKey(neighbor))
                     continue;
 
-                if (!tilemap.HasTile(neighbor))
+                bool hasTile = tilemap.HasTile(neighbor);
+                Debug.Log($"Komþu: {neighbor}, tile var mý: {hasTile}");
+
+                if (!hasTile)
                     continue;
 
                 int newDistance = currentDistance + 1;
                 distances[neighbor] = newDistance;
                 reachable.Add(neighbor);
-
-                Debug.Log($"Eriþilebilir: {neighbor}, offset: ({neighbor.x - current.x}, {neighbor.y - current.y}), mesafe: {newDistance}");
 
                 if (newDistance < moveRange)
                 {

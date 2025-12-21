@@ -84,6 +84,7 @@ public class HierarchyOrganizer : MonoBehaviour
         MoveToContainer("TurnManager", managersContainer);
         MoveToContainer("ScoreManager", managersContainer);
         MoveToContainer("ObjectSpawner", managersContainer);
+        MoveToContainer("RoundManager", managersContainer);
 
         // Characters
         MoveToContainer("PlayerCharacter", charactersContainer);

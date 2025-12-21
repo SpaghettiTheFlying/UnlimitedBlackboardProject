@@ -12,6 +12,7 @@ public class TurnManager : MonoBehaviour
     public bool isPlayerTurn = true;
 
     public ObjectSpawner objectSpawner;
+    public RoundManager roundManager;
 
     private int currentEnemyIndex = 0;
     private bool isProcessingTurn = false;
@@ -46,6 +47,11 @@ public class TurnManager : MonoBehaviour
             if (objectSpawner != null)
             {
                 objectSpawner.OnPlayerMoved();
+            }
+
+            if (roundManager != null)
+            {
+                roundManager.OnTurnComplete();
             }
 
             Debug.Log("Oyuncu hareketi tamamlandý - Düþman sýrasý");
@@ -85,7 +91,12 @@ public class TurnManager : MonoBehaviour
                 // Tüm düþmanlar yenildiyse oyun bitti
                 if (enemies.Count == 0)
                 {
-                    Debug.Log("OYUNCU KAZANDI!");
+                    Debug.Log("TÜM DÜÞMANLAR YENÝLDÝ!");
+
+                    if (roundManager != null)
+                    {
+                        roundManager.OnAllEnemiesDefeated();
+                    }
                 }
 
                 break;
@@ -155,7 +166,6 @@ public class TurnManager : MonoBehaviour
                 List<Vector3Int> tileList = new List<Vector3Int>(reachableTiles);
                 Vector3Int randomTile = tileList[Random.Range(0, tileList.Count)];
                 enemy.MoveToGridPosition(randomTile);
-                Debug.Log($"Düþman {randomTile} pozisyonuna hareket etti");
             }
         }
         else
