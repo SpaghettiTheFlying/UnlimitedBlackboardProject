@@ -61,6 +61,12 @@ public class RoundManager : MonoBehaviour
 
         // Ýlk objeyi hemen spawn et
         SpawnCollectibleForRound();
+        
+        if (turnManager != null)
+        {
+            turnManager.isPlayerTurn = true;
+            Debug.Log("Round Baþladý - Sýra Oyuncuda");
+        }
     }
 
     void ActivateLayers(int roundNumber)
@@ -163,8 +169,6 @@ public class RoundManager : MonoBehaviour
 
     Vector3Int GetRandomEnemySpawnPosition()
     {
-        // 1. ADIM: TÜM KATMANLARI GEZÝP EN GENÝÞ SINIRLARI BULALIM
-        // Baþlangýç için mantýksýz deðerler veriyoruz ki ilk tilemap bunlarý güncellesin
         int xMin = int.MaxValue, xMax = int.MinValue;
         int yMin = int.MaxValue, yMax = int.MinValue;
         bool foundAnyLayer = false;
@@ -172,37 +176,32 @@ public class RoundManager : MonoBehaviour
         foreach (GameObject layerObj in mapLayers)
         {
             if (layerObj == null) continue;
-
             Tilemap tm = layerObj.GetComponent<Tilemap>();
-            if (tm == null) continue;
+            if (tm == null || !layerObj.activeSelf) continue; // Sadece aktif layerlara bak
 
-            tm.CompressBounds(); // Boþluklarý temizle
+            tm.CompressBounds();
             BoundsInt b = tm.cellBounds;
 
-            // Bu katman boþsa atla
             if (b.size.x <= 0 || b.size.y <= 0) continue;
 
-            // Sýnýrlarý geniþlet (Union iþlemi)
             if (b.xMin < xMin) xMin = b.xMin;
             if (b.xMax > xMax) xMax = b.xMax;
             if (b.yMin < yMin) yMin = b.yMin;
             if (b.yMax > yMax) yMax = b.yMax;
-
             foundAnyLayer = true;
         }
 
-        // Eðer hiç katman yoksa veya hepsi boþsa hata ver
         if (!foundAnyLayer)
         {
-            Debug.LogError("HATA: Hiçbir katmanda tile bulunamadý!");
+            Debug.LogError("HATA: Hiçbir aktif katmanda tile bulunamadý!");
             return Vector3Int.zero;
         }
 
-        // 2. ADIM: BULDUÐUMUZ GENÝÞ SINIRLAR ÝÇÝNDE TARAMA YAPALIM
-        List<Vector3Int> validPositions = new List<Vector3Int>();
-        Vector3Int playerPos = playerCharacter.GetCurrentGridPosition();
+        // En iyiler (Uzak), Ortalar (Ýdare eder), Kötüler (Çok yakýn - istenmez)
+        List<Vector3Int> bestSpots = new List<Vector3Int>();   // Mesafe > 5
+        List<Vector3Int> mediumSpots = new List<Vector3Int>(); // Mesafe > 3
 
-        // Debug.Log($"Geniþ Tarama: X({xMin} to {xMax}), Y({yMin} to {yMax})");
+        Vector3Int playerPos = playerCharacter.GetCurrentGridPosition();
 
         for (int x = xMin; x < xMax; x++)
         {
@@ -210,31 +209,39 @@ public class RoundManager : MonoBehaviour
             {
                 Vector3Int pos = new Vector3Int(x, y, 0);
 
-                // A. ZEMÝN KONTROLÜ (Herhangi bir katmanda zemin var mý?)
-                if (!HasTileOnAnyActiveLayer(pos))
+                if (!HasTileOnAnyActiveLayer(pos) || IsPositionOccupied(pos))
                     continue;
 
-                // B. MESAFE KONTROLÜ
+                // Oyuncuya olan mesafe
                 int distance = Mathf.Abs(pos.x - playerPos.x) + Mathf.Abs(pos.y - playerPos.y);
-                if (distance < 2)
-                    continue;
 
-                // C. DOLULUK KONTROLÜ
-                if (IsPositionOccupied(pos))
-                    continue;
-
-                validPositions.Add(pos);
+                if (distance >= 6)
+                {
+                    bestSpots.Add(pos);
+                }
+                else if (distance >= 4)
+                {
+                    mediumSpots.Add(pos);
+                }
+                // Mesafe 4'ten küçükse listeye bile ekleme (Güvenli bölge)
             }
         }
 
-        Debug.Log($"Tarama Sonucu: {validPositions.Count} uygun yer bulundu.");
-
-        if (validPositions.Count > 0)
+        // Öncelik en uzak noktalarda
+        if (bestSpots.Count > 0)
         {
-            return validPositions[Random.Range(0, validPositions.Count)];
+            Debug.Log($"Spawn: En iyi konum bulundu ({bestSpots.Count} adet). Uzaklýk >= 6");
+            return bestSpots[Random.Range(0, bestSpots.Count)];
         }
 
-        Debug.LogError("HATA: Yer bulunamadý! Harita çok küçük veya dolu olabilir.");
+        // Eðer harita küçükse ve uzak nokta yoksa mecburen orta mesafeyi kullan
+        if (mediumSpots.Count > 0)
+        {
+            Debug.Log($"Spawn: Orta mesafe konum bulundu ({mediumSpots.Count} adet). Uzaklýk >= 4");
+            return mediumSpots[Random.Range(0, mediumSpots.Count)];
+        }
+
+        Debug.LogError("HATA: Oyuncudan yeterince uzak (Min 4 birim) güvenli bir yer bulunamadý!");
         return Vector3Int.zero;
     }
     bool HasTileOnAnyActiveLayer(Vector3Int pos)
