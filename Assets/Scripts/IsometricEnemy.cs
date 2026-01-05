@@ -9,7 +9,9 @@ public class IsometricEnemy : MonoBehaviour
     public float moveSpeed = 3f;
 
     [Header("References")]
-    public Tilemap tilemap;
+    public List<Tilemap> allTilemaps = new List<Tilemap>();
+
+    private Tilemap mainTilemap;
 
     [Header("VFX")]
     public GameObject deathParticles;
@@ -20,11 +22,30 @@ public class IsometricEnemy : MonoBehaviour
 
     void Start()
     {
-        if (tilemap != null)
+        UpdateMainTilemapRef();
+
+        if (mainTilemap != null)
         {
-            currentGridPosition = tilemap.WorldToCell(transform.position);
+            currentGridPosition = mainTilemap.WorldToCell(transform.position);
             SnapToTileCenter();
         }
+    }
+    public void UpdateMainTilemapRef()
+    {
+        if (allTilemaps.Count > 0 && allTilemaps[0] != null)
+        {
+            mainTilemap = allTilemaps[0];
+        }
+    }
+    public bool HasTileOnAnyLayer(Vector3Int pos)
+    {
+        foreach (var tm in allTilemaps)
+        {
+            // Tilemap aktifse ve o pozisyonda tile varsa
+            if (tm != null && tm.gameObject.activeSelf && tm.HasTile(pos))
+                return true;
+        }
+        return false;
     }
 
     void Update()
@@ -48,7 +69,7 @@ public class IsometricEnemy : MonoBehaviour
 
         targetGridPosition.z = 0;
 
-        if (!tilemap.HasTile(targetGridPosition))
+        if (!HasTileOnAnyLayer(targetGridPosition))
             return false;
 
         HashSet<Vector3Int> reachableTiles = GetReachableTiles();
@@ -57,8 +78,13 @@ public class IsometricEnemy : MonoBehaviour
             return false;
 
         currentGridPosition = targetGridPosition;
-        targetWorldPosition = tilemap.GetCellCenterWorld(targetGridPosition);
-        isMoving = true;
+
+        if (mainTilemap != null)
+        {
+            targetWorldPosition = mainTilemap.GetCellCenterWorld(targetGridPosition);
+            isMoving = true;
+            return true;
+        }
 
         return true;
     }
@@ -69,21 +95,15 @@ public class IsometricEnemy : MonoBehaviour
         Queue<Vector3Int> toExplore = new Queue<Vector3Int>();
         Dictionary<Vector3Int, int> distances = new Dictionary<Vector3Int, int>();
 
-        if (!tilemap.HasTile(currentGridPosition))
+        UpdateMainTilemapRef();
+
+        if (mainTilemap == null) return reachable;
+
+        if (!HasTileOnAnyLayer(currentGridPosition))
         {
-            BoundsInt bounds = tilemap.cellBounds;
-            for (int x = bounds.xMin; x < bounds.xMax; x++)
-            {
-                for (int y = bounds.yMin; y < bounds.yMax; y++)
-                {
-                    Vector3Int testPos = new Vector3Int(x, y, 0);
-                    if (tilemap.HasTile(testPos))
-                    {
-                        currentGridPosition = testPos;
-                        break;
-                    }
-                }
-            }
+            // Fallback: Bulunduðu yer boþsa olduðu yerde kalsýn
+            reachable.Add(currentGridPosition);
+            return reachable;
         }
 
         toExplore.Enqueue(currentGridPosition);
@@ -110,7 +130,7 @@ public class IsometricEnemy : MonoBehaviour
                 if (distances.ContainsKey(neighbor))
                     continue;
 
-                if (!tilemap.HasTile(neighbor))
+                if (!HasTileOnAnyLayer(neighbor))
                     continue;
 
                 int newDistance = currentDistance + 1;
@@ -129,7 +149,10 @@ public class IsometricEnemy : MonoBehaviour
 
     void SnapToTileCenter()
     {
-        transform.position = tilemap.GetCellCenterWorld(currentGridPosition);
+        if (mainTilemap != null)
+        {
+            transform.position = mainTilemap.GetCellCenterWorld(currentGridPosition);
+        }
     }
 
     public Vector3Int GetCurrentGridPosition()

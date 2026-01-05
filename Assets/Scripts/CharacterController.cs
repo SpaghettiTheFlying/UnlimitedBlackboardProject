@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class CharacterController : MonoBehaviour
 {
     [Header("References")]
-    public Tilemap tilemap;
+    public Tilemap mainTilemap;
     public TurnManager turnManager;
     
     [Header("Visual Feedback")]
@@ -28,7 +28,7 @@ public class CharacterController : MonoBehaviour
     
     void HandleMouseClick()
     {
-        if (!turnManager.IsPlayerTurn())
+        if (turnManager == null || !turnManager.IsPlayerTurn())
             return;
         
         if (Mouse.current.leftButton.wasPressedThisFrame)
@@ -52,14 +52,15 @@ public class CharacterController : MonoBehaviour
             
             if (selectedCharacter != null)
             {
-                Vector3Int clickedCell = tilemap.WorldToCell(mouseWorldPos);
-                
-                if (tilemap.HasTile(clickedCell))
+                Vector3Int clickedCell = mainTilemap.WorldToCell(mouseWorldPos);
+                clickedCell.z = 0;
+
+                if (selectedCharacter.HasTileOnAnyLayer(clickedCell))
                 {
                     bool isEnemyAtPosition = IsEnemyAtPosition(clickedCell);
 
                     bool moved = selectedCharacter.MoveToGridPosition(clickedCell, isEnemyAtPosition);
-                    
+
                     if (moved)
                     {
                         if (isEnemyAtPosition)
@@ -72,14 +73,20 @@ public class CharacterController : MonoBehaviour
                         }
 
                         StartCoroutine(WaitForMoveComplete(selectedCharacter));
-                        DeselectCharacter();                        
-                        
+                        DeselectCharacter();
                     }
                     else
                     {
-                        Debug.Log("Oraya hareket edilemiyor!");
+                        Debug.Log("Mesafe çok uzak veya gidilemez!");
                     }
                 }
+                else
+                {
+                    Debug.Log("Týklanan yerde (aktif katmanlarda) zemin yok.");
+                }
+
+
+
             }
         }
     }
@@ -105,9 +112,10 @@ public class CharacterController : MonoBehaviour
         yield return new WaitUntil(() => !movingCharacter.IsMoving());
 
         DeselectCharacter();
-        
+
         // Sýrayý deðiþtir
-        turnManager.OnPlayerMoveComplete();
+        if (turnManager != null)
+            turnManager.OnPlayerMoveComplete();
     }
     
     void SelectCharacter(IsometricCharacter character)
@@ -135,7 +143,10 @@ public class CharacterController : MonoBehaviour
         
         foreach (Vector3Int tile in reachableTiles)
         {
-            Vector3 worldPos = tilemap.GetCellCenterWorld(tile);
+            Vector3 worldPos = mainTilemap.GetCellCenterWorld(tile);
+
+            worldPos.z = -1f;
+
             GameObject indicator = Instantiate(movementIndicatorPrefab, worldPos, Quaternion.identity);
             movementIndicators.Add(indicator);
         }

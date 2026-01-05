@@ -152,5 +152,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::IsometricEnemy
   moveRange: 1
   moveSpeed: 3
-  tilemap: {fileID: 0}
+  allTilemaps: []
   deathParticles: {fileID: 2412411651785277256, guid: 215aca1c6cfbc9144b37389775f85b63, type: 3}

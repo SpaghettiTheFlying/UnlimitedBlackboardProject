@@ -9,7 +9,9 @@ public class IsometricCharacter : MonoBehaviour
     public float moveSpeed = 5f; // Hareket hýzý
 
     [Header("References")]
-    public Tilemap tilemap; // Haritanýn tilemap'i
+    public List<Tilemap> allTilemaps = new List<Tilemap>(); // Haritanýn tilemap'i
+
+    private Tilemap mainTilemap;
 
     public GameObject deathParticles;
 
@@ -20,11 +22,30 @@ public class IsometricCharacter : MonoBehaviour
 
     void Start()
     {
-        if (tilemap != null)
+        UpdateMainTilemapRef();
+
+        if (mainTilemap != null)
         {
-            currentGridPosition = tilemap.WorldToCell(transform.position);
+            currentGridPosition = mainTilemap.WorldToCell(transform.position);
             SnapToTileCenter();
         }
+    }
+
+    public void UpdateMainTilemapRef()
+    {
+        if (allTilemaps.Count > 0 && allTilemaps[0] != null)
+            mainTilemap = allTilemaps[0];
+    }
+
+    //Herhangi bir katmanda Tile var mý?
+    public bool HasTileOnAnyLayer(Vector3Int pos)
+    {
+        foreach (var tm in allTilemaps)
+        {
+            if (tm != null && tm.gameObject.activeSelf && tm.HasTile(pos))
+                return true;
+        }
+        return false;
     }
 
     void Update()
@@ -56,11 +77,10 @@ public class IsometricCharacter : MonoBehaviour
         if (isMoving)
             return false;
 
-        // Z deðerini 0 yap
         targetGridPosition.z = 0;
 
         // Hedef pozisyonda tile var mý kontrol et
-        if (!tilemap.HasTile(targetGridPosition))
+        if (!HasTileOnAnyLayer(targetGridPosition))
             return false;
 
         // Hareket edilebilir tile'lardan biri mi kontrol et
@@ -71,7 +91,7 @@ public class IsometricCharacter : MonoBehaviour
 
         // Hareketi baþlat
         currentGridPosition = targetGridPosition;
-        targetWorldPosition = tilemap.GetCellCenterWorld(targetGridPosition);
+        targetWorldPosition = mainTilemap.GetCellCenterWorld(targetGridPosition);
         isMoving = true;
 
         shouldGiveMovementPoint = !isAttackMove;
@@ -86,37 +106,18 @@ public class IsometricCharacter : MonoBehaviour
         Queue<Vector3Int> toExplore = new Queue<Vector3Int>();
         Dictionary<Vector3Int, int> distances = new Dictionary<Vector3Int, int>();
 
-        // DEBUG: Tilemap kontrolü
-        Debug.Log($"=== GET REACHABLE DEBUG ===");
-        Debug.Log($"Tilemap null mu: {tilemap == null}");
-        if (tilemap != null)
-        {
-            Debug.Log($"Tilemap aktif mi: {tilemap.gameObject.activeInHierarchy}");
-            Debug.Log($"Tilemap adý: {tilemap.gameObject.name}");
-        }
-        Debug.Log($"Mevcut pozisyon: {currentGridPosition}");
-        Debug.Log($"Bu pozisyonda tile var mý: {tilemap.HasTile(currentGridPosition)}");
+        UpdateMainTilemapRef();
 
-        if (!tilemap.HasTile(currentGridPosition))
+
+        if (!HasTileOnAnyLayer(currentGridPosition))
         {
-            Debug.LogWarning("Karakter tile üzerinde deðil!");
-            BoundsInt bounds = tilemap.cellBounds;
-            for (int x = bounds.xMin; x < bounds.xMax; x++)
-            {
-                for (int y = bounds.yMin; y < bounds.yMax; y++)
-                {
-                    Vector3Int testPos = new Vector3Int(x, y, 0);
-                    if (tilemap.HasTile(testPos))
-                    {
-                        currentGridPosition = testPos;
-                        break;
-                    }
-                }
-            }
+            Debug.LogWarning("Karakter boþlukta!");
         }
+
 
         toExplore.Enqueue(currentGridPosition);
         distances[currentGridPosition] = 0;
+
 
         while (toExplore.Count > 0)
         {
@@ -134,16 +135,12 @@ public class IsometricCharacter : MonoBehaviour
             new Vector3Int(current.x + 2, current.y + 1, 0),
             };
 
-            // DEBUG: Komþularý kontrol et
-            Debug.Log($"Komþu kontrol ediliyor, current: {current}");
-
             foreach (Vector3Int neighbor in neighbors)
             {
                 if (distances.ContainsKey(neighbor))
                     continue;
 
-                bool hasTile = tilemap.HasTile(neighbor);
-                Debug.Log($"Komþu: {neighbor}, tile var mý: {hasTile}");
+                bool hasTile = HasTileOnAnyLayer(neighbor);
 
                 if (!hasTile)
                     continue;
@@ -159,14 +156,14 @@ public class IsometricCharacter : MonoBehaviour
             }
         }
 
-        Debug.Log($"Toplam eriþilebilir tile sayýsý: {reachable.Count}");
         return reachable;
     }
 
     // Karakteri mevcut tile'ýn ortasýna hizala
     void SnapToTileCenter()
     {
-        transform.position = tilemap.GetCellCenterWorld(currentGridPosition);
+        if(mainTilemap != null)
+        transform.position = mainTilemap.GetCellCenterWorld(currentGridPosition);
     }
 
     public Vector3Int GetCurrentGridPosition()
