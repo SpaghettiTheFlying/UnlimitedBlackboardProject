@@ -93,6 +93,13 @@ public class IsometricCharacter : MonoBehaviour
         currentGridPosition = targetGridPosition;
         targetWorldPosition = mainTilemap.GetCellCenterWorld(targetGridPosition);
         isMoving = true;
+        shouldGiveMovementPoint = !isAttackMove;
+
+        // --- SES EKLE ---
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySFX(SoundManager.Instance.playerMoveSound);
+        }
 
         shouldGiveMovementPoint = !isAttackMove;
 
