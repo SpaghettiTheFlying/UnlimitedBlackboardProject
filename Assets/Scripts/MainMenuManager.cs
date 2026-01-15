@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -19,11 +20,24 @@ public class MainMenuManager : MonoBehaviour
         optionsPanel.SetActive(false);
         howToPlayPanel.SetActive(false);
 
-        
-        if (volumeSlider != null)
-        {
-            volumeSlider.value = AudioListener.volume;
-            volumeSlider.onValueChanged.AddListener(SetVolume);
+        StartCoroutine(PlayMusicWithDelay());
+    }
+
+    IEnumerator PlayMusicWithDelay()
+    {       
+        if (SoundManager.Instance != null && SoundManager.Instance.menuMusic != null)
+        {           
+            SoundManager.Instance.musicSource.loop = false;
+
+            while (true) 
+            {          
+                SoundManager.Instance.PlayMusic(SoundManager.Instance.menuMusic);
+
+                float musicLength = SoundManager.Instance.menuMusic.length;
+                yield return new WaitForSeconds(musicLength);
+                
+                yield return new WaitForSeconds(3f);   
+            }
         }
     }
 

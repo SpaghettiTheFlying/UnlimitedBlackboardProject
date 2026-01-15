@@ -42,6 +42,11 @@ public class RoundManager : MonoBehaviour
             baseTilemap = mapLayers[0].GetComponent<Tilemap>();
         }
 
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayMusic(SoundManager.Instance.gameMusic);
+        }
+
         StartRound(1);
     }
 

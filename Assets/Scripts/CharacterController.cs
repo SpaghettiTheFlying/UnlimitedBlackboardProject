@@ -125,6 +125,11 @@ public class CharacterController : MonoBehaviour
         selectedCharacter = character;
         Debug.Log("Karakter seçildi: " + character.gameObject.name);
         
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySFX(SoundManager.Instance.characterSelectSound);
+        }
+
         ShowMovementRange();
     }
     

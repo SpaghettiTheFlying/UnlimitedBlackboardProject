@@ -34,9 +34,28 @@ public class CollectibleObject : MonoBehaviour
 
     public void Collect(bool givePoints = true)
     {
+        if (givePoints && SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySFX(SoundManager.Instance.collectibleSound);
+        }
+
         if (givePoints && collectParticles != null)
         {
             Instantiate(collectParticles, transform.position, Quaternion.identity);
+        }
+
+        if (SoundManager.Instance == null)
+        {
+            Debug.LogError("SES GELMEZ ÇÜNKÜ SOUNDMANAGER BU SAHNEDE YOK!");
+        }
+        else
+        {
+            Debug.Log("SoundManager var, ses çal komutu gönderiliyor...");
+        }
+
+        if (givePoints && SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySFX(SoundManager.Instance.collectibleSound);
         }
 
         Destroy(gameObject);

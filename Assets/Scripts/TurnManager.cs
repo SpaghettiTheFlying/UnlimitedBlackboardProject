@@ -79,6 +79,12 @@ public class TurnManager : MonoBehaviour
             {
                 Debug.Log("Oyuncu düþmaný yendi!");
 
+                if (SoundManager.Instance != null)
+                {
+                    SoundManager.Instance.PlaySFX(SoundManager.Instance.enemyDeathSound);
+                    // SoundManager.Instance.PlaySFX(SoundManager.Instance.enemyDefeatedSound);
+                }
+
                 if (ScoreManager.Instance != null)
                 {
                     ScoreManager.Instance.OnEnemyKilled();
@@ -184,12 +190,21 @@ public class TurnManager : MonoBehaviour
         if (enemyPos == playerPos)
         {
             Debug.Log("Düþman oyuncuyu yendi!");
+
+            // (Varsa) Ölüm sesini çal
+            if (SoundManager.Instance != null)
+                SoundManager.Instance.PlaySFX(SoundManager.Instance.playerDeathSound);
+
             playerCharacter.Die();
             playerCharacter = null;
 
             Debug.Log("OYUN BÝTTÝ - DÜÞMAN KAZANDI!");
-            // Oyunu durdur veya game over ekraný göster
-            Time.timeScale = 0;
+           
+            if (GameOverManager.Instance != null)
+            {
+                // Biraz gecikmeli çaðýrabilirsin (Invoke) ama þimdilik direkt çaðýralým
+                GameOverManager.Instance.ShowGameOver();
+            }
         }
     }
 

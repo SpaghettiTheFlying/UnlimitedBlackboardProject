@@ -11,6 +11,7 @@ public class SoundManager : MonoBehaviour
     [Header("SFX Clips - Character")]
     public AudioClip playerMoveSound;
     public AudioClip playerDeathSound;
+    public AudioClip characterSelectSound;
 
     [Header("SFX Clips - Enemy")]
     public AudioClip enemyMoveSound;

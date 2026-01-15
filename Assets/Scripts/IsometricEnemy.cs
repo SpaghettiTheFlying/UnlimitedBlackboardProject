@@ -85,6 +85,13 @@ public class IsometricEnemy : MonoBehaviour
             isMoving = true;
             return true;
         }
+        isMoving = true;
+
+        // --- SES EKLE ---
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlaySFX(SoundManager.Instance.enemyMoveSound);
+        }
 
         return true;
     }

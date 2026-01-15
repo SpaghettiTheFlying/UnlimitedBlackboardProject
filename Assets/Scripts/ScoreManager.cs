@@ -13,8 +13,10 @@ public class ScoreManager : MonoBehaviour
     public int collectiblePoints = 10;
 
     [Header("UI")]
-    public TextMeshProUGUI scoreText; // veya public Text scoreText;
+    public TextMeshProUGUI scoreText;
     public TextMeshProUGUI roundText;
+
+    public TextMeshProUGUI inGameHighScoreText;
 
     public RoundManager roundManager;
 
@@ -34,6 +36,11 @@ public class ScoreManager : MonoBehaviour
     {
         UpdateScoreUI();
         UpdateRoundUI();
+
+        if (inGameHighScoreText != null)
+        {
+            inGameHighScoreText.text = $"Best: {GetHighScore()}";
+        }
     }
 
     void Update()
@@ -82,5 +89,22 @@ public class ScoreManager : MonoBehaviour
     public int GetScore()
     {
         return currentScore;
+    }
+
+    public int GetHighScore()
+    {
+        return PlayerPrefs.GetInt("HighScore", 0);
+    }
+
+    public bool CheckAndSaveHighScore()
+    {
+        int currentHighScore = GetHighScore();
+        if (currentScore > currentHighScore)
+        {
+            PlayerPrefs.SetInt("HighScore", currentScore);
+            PlayerPrefs.Save();
+            return true; // Evet, yeni rekor!
+        }
+        return false; // Hayýr, rekor kýrýlmadý.
     }
 }
