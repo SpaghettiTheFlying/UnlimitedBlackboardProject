@@ -16,6 +16,8 @@ public class ScoreManager : MonoBehaviour
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI roundText;
 
+    public TextMeshProUGUI levelText;
+
     public TextMeshProUGUI inGameHighScoreText;
 
     public RoundManager roundManager;
@@ -83,7 +85,12 @@ public class ScoreManager : MonoBehaviour
         if (roundText != null && roundManager != null)
         {
             roundText.text = $"Round: {roundManager.GetCurrentRound()}/3";
-        }   
+        }
+
+        if (levelText != null && roundManager != null)
+        {
+            levelText.text = $"Level: {roundManager.GetCurrentLevel()}";
+        }
     }
 
     public int GetScore()

@@ -1,17 +1,18 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Collections.Generic;
+using static UnityEditor.PlayerSettings;
 
 public class ObjectSpawner : MonoBehaviour
 {
     [Header("References")]
     public Tilemap tilemap;
     public IsometricCharacter playerCharacter;
-    public TurnManager turnManager; // Düþmanlara eriþmek için
+    public TurnManager turnManager;
     public GameObject collectiblePrefab;
 
     [Header("Spawn Settings")]
-    public int minDistanceFromPlayer = 3;
+    public int minDistanceFromPlayer = 2;
     public int maxCollectiblesOnMap = 5;
 
     private List<CollectibleObject> activeCollectibles = new List<CollectibleObject>();
@@ -19,17 +20,15 @@ public class ObjectSpawner : MonoBehaviour
 
     public void SpawnCollectible()
     {
-        if (activeCollectibles.Count >= maxCollectiblesOnMap)
-            return;
+        RemoveNullCollectibles();
+        if (activeCollectibles.Count >= maxCollectiblesOnMap) return;
 
         Vector3Int spawnPosition = GetRandomValidPosition();
 
         if (spawnPosition != Vector3Int.zero)
         {
-            Vector3 worldPos = tilemap.GetCellCenterWorld(spawnPosition);
+            Vector3 worldPos = GetWorldPositionForCollectible(spawnPosition);
             GameObject obj = Instantiate(collectiblePrefab, worldPos, Quaternion.identity);
-
-            // Hierarchy'yi organize et
             obj.transform.SetParent(transform);
 
             CollectibleObject collectible = obj.GetComponent<CollectibleObject>();
@@ -41,12 +40,38 @@ public class ObjectSpawner : MonoBehaviour
             }
         }
     }
+    Vector3 GetWorldPositionForCollectible(Vector3Int pos)
+    {
+        if (RoundManager.Instance == null) return tilemap.GetCellCenterWorld(pos);
+
+        for (int i = 0; i < RoundManager.Instance.activeTilemaps.Count; i++)
+        {
+            Tilemap tm = RoundManager.Instance.activeTilemaps[i];
+
+            for (int z = 2; z >= -2; z--)
+            {
+                Vector3Int checkPos = new Vector3Int(pos.x, pos.y, z);
+                if (tm.HasTile(checkPos))
+                {
+                    Vector3 worldPos = tm.GetCellCenterWorld(checkPos);
+
+                    worldPos.z -= 0.5f;
+
+                    return worldPos;
+                }
+            }
+        }
+        return tilemap.GetCellCenterWorld(pos);
+    }
 
     Vector3Int GetRandomValidPosition()
     {
-        BoundsInt bounds = tilemap.cellBounds;
-        List<Vector3Int> validPositions = new List<Vector3Int>();
+        if (RoundManager.Instance == null) return Vector3Int.zero;
 
+        // DÜZELTME: Layer 1 boþ olsa bile tüm haritayý tara
+        BoundsInt bounds = RoundManager.Instance.GetTotalBounds();
+
+        List<Vector3Int> validPositions = new List<Vector3Int>();
         Vector3Int playerPos = playerCharacter.GetCurrentGridPosition();
 
         for (int x = bounds.xMin; x < bounds.xMax; x++)
@@ -55,17 +80,14 @@ public class ObjectSpawner : MonoBehaviour
             {
                 Vector3Int pos = new Vector3Int(x, y, 0);
 
-                if (!tilemap.HasTile(pos))
-                    continue;
+                // Zemin kontrolü
+                if (!HasGroundAt(pos)) continue;
 
-                // Oyuncuya mesafe kontrolü
-                int distance = Mathf.Abs(pos.x - playerPos.x) + Mathf.Abs(pos.y - playerPos.y);
-                if (distance < minDistanceFromPlayer)
-                    continue;
+                // Mesafe kontrolü
+                if (Mathf.Abs(pos.x - playerPos.x) + Mathf.Abs(pos.y - playerPos.y) < minDistanceFromPlayer) continue;
 
-                // Bu pozisyon dolu mu kontrol et (oyuncu, düþman veya obje)
-                if (IsPositionOccupied(pos))
-                    continue;
+                // Doluluk kontrolü
+                if (IsPositionOccupied(pos)) continue;
 
                 validPositions.Add(pos);
             }
@@ -79,42 +101,39 @@ public class ObjectSpawner : MonoBehaviour
         return Vector3Int.zero;
     }
 
-    bool IsPositionOccupied(Vector3Int position)
+    bool HasGroundAt(Vector3Int pos)
     {
-        // Oyuncu bu pozisyonda mý?
-        if (playerCharacter.GetCurrentGridPosition() == position)
-            return true;
-
-        // Düþmanlar bu pozisyonda mý?
-        if (turnManager != null && turnManager.enemies != null)
+        foreach (var tm in RoundManager.Instance.activeTilemaps)
         {
-            foreach (IsometricEnemy enemy in turnManager.enemies)
+            for (int z = -2; z <= 2; z++)
             {
-                if (enemy != null && enemy.GetCurrentGridPosition() == position)
-                    return true;
+                if (tm.HasTile(new Vector3Int(pos.x, pos.y, z))) return true;
             }
         }
+        return false;
+    }
+    bool IsPositionOccupied(Vector3Int pos)
+    {
+        if (playerCharacter.GetCurrentGridPosition().x == pos.x && playerCharacter.GetCurrentGridPosition().y == pos.y) return true;
 
-        // Bir obje bu pozisyonda mý?
-        foreach (CollectibleObject collectible in activeCollectibles)
+        foreach (var enemy in turnManager.enemies)
         {
-            if (collectible != null && collectible.GetGridPosition() == position)
-                return true;
+            if (enemy != null && enemy.GetCurrentGridPosition().x == pos.x && enemy.GetCurrentGridPosition().y == pos.y) return true;
         }
 
+        foreach (var col in activeCollectibles)
+        {
+            if (col != null && col.GetGridPosition().x == pos.x && col.GetGridPosition().y == pos.y) return true;
+        }
         return false;
     }
 
     public void OnPlayerMoved()
     {
-        for (int i = activeCollectibles.Count - 1; i >= 0; i--)
-        {
-            if (activeCollectibles[i] == null)
-            {
-                activeCollectibles.RemoveAt(i);
-                continue;
-            }
-
+        RemoveNullCollectibles();
+        
+        for (int i = activeCollectibles.Count - 1; i >= 0; i--) 
+        { 
             activeCollectibles[i].DecrementLifetime();
 
             if (activeCollectibles[i] == null)
@@ -122,37 +141,28 @@ public class ObjectSpawner : MonoBehaviour
                 activeCollectibles.RemoveAt(i);
             }
         }
-
-        if (Random.value < 0.5f)
-        {
-            SpawnCollectible();
-        }
     }
 
-    public void CheckCollectiblePickup(Vector3Int position, bool isPlayer)
+    public void CheckCollectiblePickup(Vector3Int playerGridPos, bool isPlayer)
     {
+        RemoveNullCollectibles();
         for (int i = activeCollectibles.Count - 1; i >= 0; i--)
         {
-            if (activeCollectibles[i] == null)
-            {
-                activeCollectibles.RemoveAt(i);
-                continue;
-            }
+            Vector3Int colPos = activeCollectibles[i].GetGridPosition();
 
-            if (activeCollectibles[i].GetGridPosition() == position)
+            if (colPos.x == playerGridPos.x && colPos.y == playerGridPos.y)
             {
                 if (isPlayer)
                 {
-                    Debug.Log("Oyuncu obje topladý!");
+                    Debug.Log("Obje Toplandý!");
                     ScoreManager.Instance.OnCollectibleGathered();
                     activeCollectibles[i].Collect(true);
                 }
                 else
                 {
-                    Debug.Log("Düþman objeyi yok etti");
+                    Debug.Log("Düþman objeyi ezdi!");
                     activeCollectibles[i].Collect(false);
                 }
-
                 activeCollectibles.RemoveAt(i);
                 break;
             }

@@ -19,7 +19,8 @@ public class SoundManager : MonoBehaviour
 
     [Header("SFX Clips - General")]
     public AudioClip collectibleSound;
-    public AudioClip enemyDefeatedSound; // Oyuncu düþmaný kestiðinde
+    public AudioClip enemyDefeatedSound;
+    public AudioClip levelCompleteSound;
 
     [Header("Audio Sources")]
     public AudioSource musicSource; // Müzikler için (Loop açýk olmalý)

@@ -183,6 +183,18 @@ public class IsometricCharacter : MonoBehaviour
         return isMoving;
     }
 
+    public void TeleportToGridPosition(Vector3Int gridPos, Vector3 worldPos)
+    {
+        currentGridPosition = gridPos;
+        currentGridPosition.z = 0; 
+        transform.position = worldPos; 
+        targetWorldPosition = worldPos;
+        isMoving = false;
+
+        UpdateMainTilemapRef(); 
+        SnapToTileCenter();     
+    }
+
     public void Die()
     {
         if(deathParticles != null)

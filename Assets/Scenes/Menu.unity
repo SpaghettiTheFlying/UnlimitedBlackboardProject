@@ -1554,10 +1554,11 @@ MonoBehaviour:
   playerMoveSound: {fileID: 8300000, guid: eecdd60b3d13b4348acce445ec2983ba, type: 3}
   playerDeathSound: {fileID: 8300000, guid: ea3e96cf4cb8dbd4caae7a28b69b19eb, type: 3}
   characterSelectSound: {fileID: 8300000, guid: eecdd60b3d13b4348acce445ec2983ba, type: 3}
-  enemyMoveSound: {fileID: 0}
-  enemyDeathSound: {fileID: 0}
+  enemyMoveSound: {fileID: 8300000, guid: 26db0859c1ae951468bff4c27655af1a, type: 3}
+  enemyDeathSound: {fileID: 8300000, guid: 70133cb8950cf8d499e1d4af20bf38d1, type: 3}
   collectibleSound: {fileID: 8300000, guid: d472e2f560b8e0246b25a306fc4acafb, type: 3}
-  enemyDefeatedSound: {fileID: 0}
+  enemyDefeatedSound: {fileID: 8300000, guid: 9b6f84935d113714e97a478b99c65377, type: 3}
+  levelCompleteSound: {fileID: 8300000, guid: 9b6f84935d113714e97a478b99c65377, type: 3}
   musicSource: {fileID: 623394738}
   sfxSource: {fileID: 623394737}
 --- !u!4 &623394736
@@ -2449,7 +2450,7 @@ MonoBehaviour:
       - m_Target: {fileID: 1228818351}
         m_TargetAssemblyTypeName: MainMenuManager, Assembly-CSharp
         m_MethodName: SetVolume
-        m_Mode: 4
+        m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine

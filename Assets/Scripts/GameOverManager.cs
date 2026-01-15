@@ -56,6 +56,11 @@ public class GameOverManager : MonoBehaviour
             currentScoreText.text = $"Score: {finalScore}";
             highScoreText.text = $"High Score: {ScoreManager.Instance.GetHighScore()}";
         }
+
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.musicSource.Stop();
+        }
     }
 
     public void RetryLevel()
